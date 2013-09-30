@@ -46,10 +46,11 @@ class ForemanReporting < Chef::Handler
 		metrics['resources'] = { 'total' => run_status.all_resources.count }
                 times = {}
 		run_status.all_resources.each do |resource|
-			if times[resource.class.to_s].nil?
-				times[resource.class.to_s] = resource.elapsed_time
+			resource_name = resource.resource_name
+			if times[resource_name].nil?
+				times[resource_name] = resource.elapsed_time
 			else
-				times[resource.class.to_s] += resource.elapsed_time
+				times[resource_name] += resource.elapsed_time
 			end
 		end
 		metrics['time']=times.merge!({ 'total' => run_status.elapsed_time })
