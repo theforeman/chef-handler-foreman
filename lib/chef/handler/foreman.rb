@@ -25,7 +25,7 @@ class ForemanReporting < Chef::Handler
 		@options.merge! opts
 	end
 	
-	METRIC = %w[applied restarted failed failed_restarts skipped pending]
+	METRIC = %w[restarted failed failed_restarts skipped pending]
 	def report
 
 		report = {}
@@ -38,10 +38,14 @@ class ForemanReporting < Chef::Handler
 		if failed?
 			report_status['failed'] = 1
 		end
+		report_status['applied'] = run_status.updated_resources.count
 		report['status'] = report_status
 
-		# I don't know what metrics is used for
+		# I compute can't compute much metrics for now
+		run_time = run_status.end_time - run_status.start_time
 		metrics = {}
+		metrics['resources'] = { 'total' => run_status.all_resources.count }
+		metrics['time'] = { 'Runtime' => run_time, 'total' => run_time }
 		report['metrics'] =  metrics
 
 		logs = []
@@ -64,6 +68,8 @@ class ForemanReporting < Chef::Handler
 
 		report['logs'] = logs
 		full_report =  { 'report' => report}
+
+		Chef::Log.info("Report is #{full_report.inspect}")
 
 		send_report(full_report)
 	end
