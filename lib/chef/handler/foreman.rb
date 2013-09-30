@@ -5,13 +5,16 @@ require 'net/https'
 require 'uri'
 
 class ForemanReporting < Chef::Handler
-  
+        attr_reader :options 
 	def initialize ( opts = {})
 		@options = {
-			:foreman_url = 'http://foreman.fitzdsl.net:3000'
+			:foreman_url => 'http://foreman.fitzdsl.net:3000'
 		}
-	end
 
+		@options.merge! opts
+	end
+	
+	METRIC = %w[applied restarted failed failed_restarts skipped pending]
 	def report
 		Chef::Log.debug("Run status is #{run_status.inspect}")
 
@@ -27,22 +30,35 @@ class ForemanReporting < Chef::Handler
 		report['host'] = node.fqdn
 		report['reported_at'] = Time.now.utc.to_s
 		report_status = {}
-		METRIC = %w[applied restarted failed failed_restarts skipped pending]
 		METRIC.each do |m|
 		        report_status[m] = 0
 		end
-		report['metrics'] = {}
+		report['status'] = report_status
+		metrics = {}
+		metrics['applied'] = 1
+		metrics['restarted'] = 0
+		metrics['failed'] = 0
+		metrics['failed_restarts'] = 0
+		metrics['skipped'] = 0
+		metrics['pending'] = 0
+		report['metrics'] =  metrics
+
 		logs = []
 		l = { 'log' => { 'sources' => {}, 'messages' => {} } }
 		l['log']['level'] = 'notice'
-		l['log']['messages']['message'] = run_status.inspect
+		l['log']['messages']['message'] = "Chef has done this"
 		l['log']['sources']['source'] = 'Chef'
 		logs << l
 		report['logs'] = logs
+		full_report =  { 'report' => report}
 
-		req.body = report.to_json
+
+		Chef::Log.info("Report is #{full_report.inspect}")
+
+		req.body = full_report.to_json
+		response = http.request(req)
 	end
 
-
+end
 
 
