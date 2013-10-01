@@ -61,7 +61,7 @@ class ForemanReporting < Chef::Handler
 			l = { 'log' => { 'sources' => {}, 'messages' => {} } }
 			l['log']['level'] = 'notice'
 			l['log']['messages']['message'] = resource.action.to_s
-			l['log']['sources']['source'] = [resource.class.to_s,resource.name].join(' ')
+			l['log']['sources']['source'] = [resource.resource_name.to_s,resource.name].join(' ')
 			logs << l
 		end
 
