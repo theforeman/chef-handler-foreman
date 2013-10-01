@@ -58,10 +58,21 @@ class ForemanReporting < Chef::Handler
 
 		logs = []
 		run_status.updated_resources.each  do |resource|
+
 			l = { 'log' => { 'sources' => {}, 'messages' => {} } }
 			l['log']['level'] = 'notice'
-			l['log']['messages']['message'] = resource.action.to_s
+
+			case resource.resource_name.to_s
+			when 'template','cookbook_file'
+				message = resource.diff
+			when 'package'
+				message = "Installed #{resource.package_name} package in #{resource.version}"
+			else
+			        message = resource.action.to_s
+			end
+			l['log']['messages']['message'] = message
 			l['log']['sources']['source'] = [resource.resource_name.to_s,resource.name].join(' ')
+			#Chef::Log.info("Diff is #{l['log']['messages']['message']}")
 			logs << l
 		end
 
@@ -76,8 +87,6 @@ class ForemanReporting < Chef::Handler
 
 		report['logs'] = logs
 		full_report =  { 'report' => report}
-
-		Chef::Log.info("Report is #{full_report.inspect}")
 
 		send_report(full_report)
 	end
