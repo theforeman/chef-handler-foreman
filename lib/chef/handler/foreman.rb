@@ -20,7 +20,7 @@ require 'uri'
 class ForemanReporting < Chef::Handler
   attr_reader :options
 
-  def initialize (opts = {})
+  def initialize(opts = {})
     #Default report values
     @options = {}
     @options.merge! opts
