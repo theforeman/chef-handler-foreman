@@ -18,106 +18,107 @@ require 'net/https'
 require 'uri'
 
 class ForemanReporting < Chef::Handler
-        attr_reader :options 
-	def initialize ( opts = {})
-		#Default report values
-		@options = {}
-		@options.merge! opts
-	end
-	
-	METRIC = %w[restarted failed failed_restarts skipped pending]
-	def report
+  attr_reader :options
 
-		report = {}
-		report['host'] = node.fqdn
-		report['reported_at'] = Time.now.utc.to_s
-		report_status = {}
-		METRIC.each do |m|
-		        report_status[m] = 0
-		end
-		if failed?
-			report_status['failed'] = 1
-		end
-		report_status['applied'] = run_status.updated_resources.count
-		report['status'] = report_status
+  def initialize (opts = {})
+    #Default report values
+    @options = {}
+    @options.merge! opts
+  end
 
-		# I compute can't compute much metrics for now
-		metrics = {}
-		metrics['resources'] = { 'total' => run_status.all_resources.count }
-                times = {}
-		run_status.all_resources.each do |resource|
-			resource_name = resource.resource_name
-			if times[resource_name].nil?
-				times[resource_name] = resource.elapsed_time
-			else
-				times[resource_name] += resource.elapsed_time
-			end
-		end
-		metrics['time']=times.merge!({ 'total' => run_status.elapsed_time })
-		report['metrics'] =  metrics
+  METRIC = %w[restarted failed failed_restarts skipped pending]
 
-		logs = []
-		run_status.updated_resources.each  do |resource|
+  def report
+    report                = {}
+    report['host']        = node.fqdn
+    report['reported_at'] = Time.now.utc.to_s
+    report_status         = {}
+    METRIC.each do |m|
+      report_status[m] = 0
+    end
+    if failed?
+      report_status['failed'] = 1
+    end
+    report_status['applied'] = run_status.updated_resources.count
+    report['status']         = report_status
 
-			l = { 'log' => { 'sources' => {}, 'messages' => {} } }
-			l['log']['level'] = 'notice'
+    # I compute can't compute much metrics for now
+    metrics                  = {}
+    metrics['resources']     = { 'total' => run_status.all_resources.count }
+    times                    = {}
+    run_status.all_resources.each do |resource|
+      resource_name = resource.resource_name
+      if times[resource_name].nil?
+        times[resource_name] = resource.elapsed_time
+      else
+        times[resource_name] += resource.elapsed_time
+      end
+    end
+    metrics['time']   =times.merge!({ 'total' => run_status.elapsed_time })
+    report['metrics'] = metrics
 
-			case resource.resource_name.to_s
-			when 'template','cookbook_file'
-				message = resource.diff
-			when 'package'
-				message = "Installed #{resource.package_name} package in #{resource.version}"
-			else
-			        message = resource.action.to_s
-			end
-			l['log']['messages']['message'] = message
-			l['log']['sources']['source'] = [resource.resource_name.to_s,resource.name].join(' ')
-			#Chef::Log.info("Diff is #{l['log']['messages']['message']}")
-			logs << l
-		end
+    logs = []
+    run_status.updated_resources.each do |resource|
 
-		# I only set failed to 1 if chef run failed
-		if failed?
-			l = { 'log' => { 'sources' => {}, 'messages' => {} } }
-			l['log']['level'] = 'err'
-			l['log']['sources']['source'] = 'chef'
-			l['log']['messages']['message'] = run_status.exception
-			logs << l
-		end
+      l                 = { 'log' => { 'sources' => {}, 'messages' => {} } }
+      l['log']['level'] = 'notice'
 
-		report['logs'] = logs
-		full_report =  { 'report' => report}
+      case resource.resource_name.to_s
+        when 'template', 'cookbook_file'
+          message = resource.diff
+        when 'package'
+          message = "Installed #{resource.package_name} package in #{resource.version}"
+        else
+          message = resource.action.to_s
+      end
+      l['log']['messages']['message'] = message
+      l['log']['sources']['source']   = [resource.resource_name.to_s, resource.name].join(' ')
+      #Chef::Log.info("Diff is #{l['log']['messages']['message']}")
+      logs << l
+    end
 
-		send_report(full_report)
-	end
+    # I only set failed to 1 if chef run failed
+    if failed?
+      l                               = { 'log' => { 'sources' => {}, 'messages' => {} } }
+      l['log']['level']               = 'err'
+      l['log']['sources']['source']   = 'chef'
+      l['log']['messages']['message'] = run_status.exception
+      logs << l
+    end
 
-	private
+    report['logs'] = logs
+    full_report    = { 'report' => report }
 
-	def send_report (report)
-		uri = URI.parse(options[:foreman_url])
-		http = Net::HTTP.new(uri.host, uri.port)
-		http.use_ssl     = uri.scheme == 'https'
-		http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+    send_report(full_report)
+  end
+
+  private
+
+  def send_report (report)
+    uri              = URI.parse(options[:foreman_url])
+    http             = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl     = uri.scheme == 'https'
+    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
 
-		if http.use_ssl?
-			if options[:foreman_ssl_ca] && !options[:foreman_ssl_ca].empty?
-			  http.ca_file = options[:foreman_ssl_ca]
-			  http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-			else
-			  http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-			end
-			if options[:foreman_ssl_cert] && !options[:foreman_ssl_cert].empty? && options[:foreman_ssl_key] && !options[:foreman_ssl_key].empty?
-			  http.cert = OpenSSL::X509::Certificate.new(File.read(options[:foreman_ssl_cert]))
-			  http.key  = OpenSSL::PKey::RSA.new(File.read(options[:foreman_ssl_key]), nil)
-			end
-		end
-		req = Net::HTTP::Post.new("#{uri.path}/api/reports")
-		req.add_field('Accept', 'application/json,version=2' )
-		req.content_type = 'application/json'
-		req.body = report.to_json
-		response = http.request(req)
-	end
+    if http.use_ssl?
+      if options[:foreman_ssl_ca] && !options[:foreman_ssl_ca].empty?
+        http.ca_file     = options[:foreman_ssl_ca]
+        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
+      else
+        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+      if options[:foreman_ssl_cert] && !options[:foreman_ssl_cert].empty? && options[:foreman_ssl_key] && !options[:foreman_ssl_key].empty?
+        http.cert = OpenSSL::X509::Certificate.new(File.read(options[:foreman_ssl_cert]))
+        http.key  = OpenSSL::PKey::RSA.new(File.read(options[:foreman_ssl_key]), nil)
+      end
+    end
+    req = Net::HTTP::Post.new("#{uri.path}/api/reports")
+    req.add_field('Accept', 'application/json,version=2')
+    req.content_type = 'application/json'
+    req.body         = report.to_json
+    response         = http.request(req)
+  end
 end
 
 
