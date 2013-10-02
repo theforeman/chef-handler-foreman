@@ -1,5 +1,3 @@
-require 'pry'
-
 class ForemanFacts < Chef::Handler
   attr_reader :options
 
