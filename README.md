@@ -6,15 +6,16 @@ See: http://www.theforeman.org
 
 # Usage:
 
-In /etc/chef/config.rb :
-	
-	require '/PATH/TO/lib/chef/handler/foreman.rb'
+In /etc/chef/config.rb:
+
+	require '/PATH/TO/lib/chef/handler/foreman_reporting.rb'
 	foreman_handler = ForemanReporting.new({:foreman_url => 'https://foreman.example.com'})
 	report_handlers << foreman_handler
 	exception_handlers << foreman_handler	
 
-To play with facts uploading you can just add fact reporter like this
-	require '/home/ares/z/chef-handler-foreman/lib/chef/handler/foreman_facts.rb'
+To play with facts uploading you can just add fact reporter like this:
+
+	require '/PATH/TO//lib/chef/handler/foreman_facts.rb'
 	foreman_facts_handler = ForemanFacts.new({:foreman_url => 'http://foreman.example.com'})
 	report_handlers << foreman_facts_handler
 	exception_handlers << foreman_facts_handler

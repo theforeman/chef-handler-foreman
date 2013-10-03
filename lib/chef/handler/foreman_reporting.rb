@@ -11,20 +11,9 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-require 'chef'
-require 'chef/handler'
-require 'net/http'
-require 'net/https'
-require 'uri'
+require "#{File.dirname(__FILE__)}/foreman_base"
 
-class ForemanReporting < Chef::Handler
-  attr_reader :options
-
-  def initialize(opts = {})
-    #Default report values
-    @options = {}
-    @options.merge! opts
-  end
+class ForemanReporting < ForemanBase
 
   METRIC = %w[restarted failed failed_restarts skipped pending]
 
@@ -94,30 +83,8 @@ class ForemanReporting < Chef::Handler
 
   private
 
-  def send_report (report)
-    uri              = URI.parse(options[:foreman_url])
-    http             = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl     = uri.scheme == 'https'
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-
-    if http.use_ssl?
-      if options[:foreman_ssl_ca] && !options[:foreman_ssl_ca].empty?
-        http.ca_file     = options[:foreman_ssl_ca]
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      else
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-      if options[:foreman_ssl_cert] && !options[:foreman_ssl_cert].empty? && options[:foreman_ssl_key] && !options[:foreman_ssl_key].empty?
-        http.cert = OpenSSL::X509::Certificate.new(File.read(options[:foreman_ssl_cert]))
-        http.key  = OpenSSL::PKey::RSA.new(File.read(options[:foreman_ssl_key]), nil)
-      end
-    end
-    req = Net::HTTP::Post.new("#{uri.path}/api/reports")
-    req.add_field('Accept', 'application/json,version=2')
-    req.content_type = 'application/json'
-    req.body         = report.to_json
-    response         = http.request(req)
+  def send_report(report)
+    foreman_request('/api/reports', report)
   end
 end
 

@@ -1,12 +1,19 @@
-class ForemanFacts < Chef::Handler
-  attr_reader :options
+#This program is free software: you can redistribute it and/or modify
+#it under the terms of the GNU General Public License as published by
+#the Free Software Foundation, either version 3 of the License, or
+#(at your option) any later version.
+#
+#This program is distributed in the hope that it will be useful,
+#but WITHOUT ANY WARRANTY; without even the implied warranty of
+#MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#GNU General Public License for more details.
+#
+#You should have received a copy of the GNU General Public License
+#along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-  def initialize(opts = {})
-    #Default report values
-    @options = {}
-    @options.merge! opts
-  end
+require "#{File.dirname(__FILE__)}/foreman_base"
 
+class ForemanFacts < ForemanBase
   def report
     send_attributes(prepare_facts)
   end
@@ -54,29 +61,7 @@ class ForemanFacts < Chef::Handler
   end
 
   def send_attributes(attributes)
-    uri              = URI.parse(options[:foreman_url])
-    http             = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl     = uri.scheme == 'https'
-    http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-
-
-    if http.use_ssl?
-      if options[:foreman_ssl_ca] && !options[:foreman_ssl_ca].empty?
-        http.ca_file     = options[:foreman_ssl_ca]
-        http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      else
-        http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      end
-      if options[:foreman_ssl_cert] && !options[:foreman_ssl_cert].empty? && options[:foreman_ssl_key] && !options[:foreman_ssl_key].empty?
-        http.cert = OpenSSL::X509::Certificate.new(File.read(options[:foreman_ssl_cert]))
-        http.key  = OpenSSL::PKey::RSA.new(File.read(options[:foreman_ssl_key]), nil)
-      end
-    end
-    req = Net::HTTP::Post.new("#{uri.path}/api/hosts/facts")
-    req.add_field('Accept', 'application/json,version=2')
-    req.content_type = 'application/json'
-    req.body         = attributes.to_json
-    response         = http.request(req)
+    foreman_request('/api/hosts/facts', attributes)
   end
 end
 
