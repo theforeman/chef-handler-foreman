@@ -18,23 +18,19 @@ class ForemanReporting < ForemanBase
   METRIC = %w[restarted failed failed_restarts skipped pending]
 
   def report
-    report                = {}
-    report['host']        = node.fqdn
-    report['reported_at'] = Time.now.utc.to_s
-    report_status         = {}
-    METRIC.each do |m|
-      report_status[m] = 0
-    end
-    if failed?
-      report_status['failed'] = 1
-    end
+    report                  = { 'host' => node.fqdn, 'reported_at' => Time.now.utc.to_s }
+    report_status           = Hash.new(0)
+
+
+    report_status['failed'] = 1 if failed?
     report_status['applied'] = run_status.updated_resources.count
     report['status']         = report_status
 
-    # I compute can't compute much metrics for now
+    # I can't compute much metrics for now
     metrics                  = {}
     metrics['resources']     = { 'total' => run_status.all_resources.count }
-    times                    = {}
+
+    times           = {}
     run_status.all_resources.each do |resource|
       resource_name = resource.resource_name
       if times[resource_name].nil?
@@ -43,14 +39,12 @@ class ForemanReporting < ForemanBase
         times[resource_name] += resource.elapsed_time
       end
     end
-    metrics['time']   =times.merge!({ 'total' => run_status.elapsed_time })
+    metrics['time'] = times.merge!({ 'total' => run_status.elapsed_time })
     report['metrics'] = metrics
 
     logs = []
     run_status.updated_resources.each do |resource|
-
-      l                 = { 'log' => { 'sources' => {}, 'messages' => {} } }
-      l['log']['level'] = 'notice'
+      l = { 'log' => { 'sources' => {}, 'messages' => {}, 'level' => 'notice' } }
 
       case resource.resource_name.to_s
         when 'template', 'cookbook_file'
@@ -68,11 +62,12 @@ class ForemanReporting < ForemanBase
 
     # I only set failed to 1 if chef run failed
     if failed?
-      l                               = { 'log' => { 'sources' => {}, 'messages' => {} } }
-      l['log']['level']               = 'err'
-      l['log']['sources']['source']   = 'chef'
-      l['log']['messages']['message'] = run_status.exception
-      logs << l
+      logs << {
+          'log' => {
+              'sources'  => { 'source' => 'chef' },
+              'messages' => { 'message' => run_status.exception },
+              'level'    => 'err' }
+      }
     end
 
     report['logs'] = logs
@@ -87,5 +82,3 @@ class ForemanReporting < ForemanBase
     foreman_request('/api/reports', report)
   end
 end
-
-
