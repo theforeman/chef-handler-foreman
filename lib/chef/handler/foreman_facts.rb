@@ -18,7 +18,7 @@ class ForemanFacts < Chef::Handler
       :facts => plain_attributes.merge({
                                            :operatingsystem        => node.lsb.id,
                                            :operatingsystemrelease => node.lsb.release,
-                                           :_timestamp             => Time.now.to_i
+                                           :_timestamp             => Time.now
                                        })
     }
   end
