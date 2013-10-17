@@ -23,7 +23,7 @@ class ForemanFacts < ForemanBase
   def prepare_facts
     { :name  => node.name,
       :facts => plain_attributes.merge({
-                                           :operatingsystem        => node.lsb.id,
+                                           :operatingsystem        => node.lsb[:id],
                                            :operatingsystemrelease => node.lsb.release,
                                            :_timestamp             => Time.now
                                        })
