@@ -57,7 +57,7 @@ class ForemanFacts < ForemanBase
   end
 
   def get_key(key, prefix)
-    [prefix, key].compact.join('_')
+    [prefix, key].compact.join('::')
   end
 
   def send_attributes(attributes)
