@@ -25,7 +25,8 @@ class ForemanFacts < ForemanBase
       :facts => plain_attributes.merge({
                                            :operatingsystem        => node.lsb[:id],
                                            :operatingsystemrelease => node.lsb.release,
-                                           :_timestamp             => Time.now
+                                           :_timestamp             => Time.now,
+                                           :_type                  => 'foreman_chef'
                                        })
     }
   end
