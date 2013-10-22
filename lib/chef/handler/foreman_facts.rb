@@ -23,9 +23,10 @@ class ForemanFacts < ForemanBase
   def prepare_facts
     { :name  => node.name,
       :facts => plain_attributes.merge({
-                                           :operatingsystem        => node.lsb.id,
+                                           :operatingsystem        => node.lsb[:id],
                                            :operatingsystemrelease => node.lsb.release,
-                                           :_timestamp             => Time.now
+                                           :_timestamp             => Time.now,
+                                           :_type                  => 'foreman_chef'
                                        })
     }
   end
@@ -57,7 +58,7 @@ class ForemanFacts < ForemanBase
   end
 
   def get_key(key, prefix)
-    [prefix, key].compact.join('_')
+    [prefix, key].compact.join('::')
   end
 
   def send_attributes(attributes)
