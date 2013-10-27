@@ -9,14 +9,14 @@ See: http://www.theforeman.org
 In /etc/chef/config.rb:
 
 	require '/PATH/TO/lib/chef/handler/foreman_reporting.rb'
-	foreman_handler = ForemanReporting.new({:url => 'https://foreman.example.com'})
+	foreman_handler = ForemanReporting.new({:url => 'https://smart-proxy.example.com:8443', :client_key => '/etc/chef/client.pem'})
 	report_handlers << foreman_handler
 	exception_handlers << foreman_handler	
 
 To play with facts uploading you can just add fact reporter like this:
 
 	require '/PATH/TO//lib/chef/handler/foreman_facts.rb'
-	foreman_facts_handler = ForemanFacts.new({:url => 'http://foreman.example.com'})
+	foreman_facts_handler = ForemanFacts.new({:url => 'http://smart-proxy.example.com:8443', :client_key => '/etc/chef/client.pem'})
 	report_handlers << foreman_facts_handler
 	exception_handlers << foreman_facts_handler
 
