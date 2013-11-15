@@ -22,7 +22,7 @@ class ForemanBase < Chef::Handler
 
   def initialize(opts = {})
     #Default report values
-    @options = {}
+    @options = { :client_key => '/etc/chef/client.pem'}
     @options.merge! opts
   end
 
