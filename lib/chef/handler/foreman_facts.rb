@@ -11,9 +11,11 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-require "#{File.dirname(__FILE__)}/foreman_base"
+require "#{File.dirname(__FILE__)}/foreman_uploader"
 
-class ForemanFacts < ForemanBase
+class ForemanFacts < Chef::Handler
+  attr_accessor :uploader
+
   def report
     send_attributes(prepare_facts)
   end
@@ -62,7 +64,11 @@ class ForemanFacts < ForemanBase
   end
 
   def send_attributes(attributes)
-    foreman_request('/facts', attributes, node.name)
+    if uploader
+      uploader.foreman_request('/api/hosts/facts', attributes, node.name)
+    else
+      Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
+    end
   end
 end
 

@@ -11,11 +11,10 @@
 #You should have received a copy of the GNU General Public License
 #along with this program.  If not, see <http://www.gnu.org/licenses/>
 
-require "#{File.dirname(__FILE__)}/foreman_base"
+require "#{File.dirname(__FILE__)}/foreman_uploader"
 
-class ForemanReporting < ForemanBase
-
-  METRIC = %w[restarted failed failed_restarts skipped pending]
+class ForemanReporting < Chef::Handler
+  attr_accessor :uploader
 
   def report
     report                  = { 'host' => node.fqdn, 'reported_at' => Time.now.utc.to_s }
@@ -79,6 +78,10 @@ class ForemanReporting < ForemanBase
   private
 
   def send_report(report)
-    foreman_request('/reports', report, node.name)
+    if uploader
+      uploader.foreman_request('/api/reports', report, node.name)
+    else
+      Chef::Log.error "No uploader registered for foreman reporting, skipping report upload"
+    end
   end
 end

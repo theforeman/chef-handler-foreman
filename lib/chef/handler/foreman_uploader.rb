@@ -17,7 +17,7 @@ require 'net/http'
 require 'net/https'
 require 'uri'
 
-class ForemanBase < Chef::Handler
+class ForemanUploader
   attr_reader :options
 
   def initialize(opts = {})
@@ -26,9 +26,7 @@ class ForemanBase < Chef::Handler
     @options.merge! opts
   end
 
-  private
-
-  def foreman_request(path, body,client_name)
+  def foreman_request(path, body, client_name)
     uri              = URI.parse(options[:url])
     http             = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl     = uri.scheme == 'https'
