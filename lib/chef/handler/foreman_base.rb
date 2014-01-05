@@ -22,13 +22,13 @@ class ForemanBase < Chef::Handler
 
   def initialize(opts = {})
     #Default report values
-    @options = {}
+    @options = { :client_key => '/etc/chef/client.pem'}
     @options.merge! opts
   end
 
   private
 
-  def foreman_request(path, body)
+  def foreman_request(path, body,client_name)
     uri              = URI.parse(options[:url])
     http             = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl     = uri.scheme == 'https'
@@ -49,7 +49,21 @@ class ForemanBase < Chef::Handler
     req = Net::HTTP::Post.new("#{uri.path}/#{path}")
     req.add_field('Accept', 'application/json,version=2')
     req.content_type = 'application/json'
-    req.body         = body.to_json
+    body_json        = body.to_json
+    req.body         = body_json
+    req.add_field('X-Foreman-Signature',sign_request(body_json,options[:client_key]))
+    req.add_field('X-Foreman-Client',client_name)
     response         = http.request(req)
   end
+
+  def sign_request(body_json,key_path = '/etc/chef/client.pem')
+     require 'openssl'
+     require 'digest/sha2'
+     require 'base64'
+     hash_body = Digest::SHA256.hexdigest(body_json)
+     key = OpenSSL::PKey::RSA.new(File.read(key_path))
+     # Base64.encode64 is adding \n in the string
+     signature = Base64.encode64(key.sign(OpenSSL::Digest::SHA256.new,hash_body)).gsub("\n",'')
+   end
+
 end

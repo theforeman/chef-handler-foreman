@@ -62,7 +62,7 @@ class ForemanFacts < ForemanBase
   end
 
   def send_attributes(attributes)
-    foreman_request('/api/hosts/facts', attributes)
+    foreman_request('/facts', attributes, node.name)
   end
 end
 

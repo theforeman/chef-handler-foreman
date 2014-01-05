@@ -79,6 +79,6 @@ class ForemanReporting < ForemanBase
   private
 
   def send_report(report)
-    foreman_request('/api/reports', report)
+    foreman_request('/reports', report, node.name)
   end
 end
