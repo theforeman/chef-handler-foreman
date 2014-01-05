@@ -7,6 +7,7 @@ module ChefHandlerForeman
   module ForemanHooks
     # {:url => '', ...}
     def foreman_server_options(options)
+      { :client_key => client_key || '/etc/chef/client.pem' }.merge(options)
       @foreman_uploader = ForemanUploader.new(options)
     end
 

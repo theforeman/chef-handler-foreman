@@ -23,7 +23,7 @@ module ChefHandlerForeman
     attr_reader :options
 
     def initialize(opts = {})
-      @options = { :client_key => '/etc/chef/client.pem' }.merge(opts)
+      @options = opts
     end
 
     def foreman_request(path, body, client_name)
