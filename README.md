@@ -1,24 +1,31 @@
-# DESCRIPTION:
+# Description
 
-This script is an alpha version of Chef report handler that send reports to TheForeman Project.
+This gem adds Chef report and attributes handlers that send reports to TheForeman Project.
 You need Foreman 1.3+ to use it.
 See: http://www.theforeman.org
 
-# Usage:
+## Installation
+
+
+Since it's released as a gem you can simply run
+```sh
+# gem install chef_foreman_handler
+```
+## Usage:
 
 In /etc/chef/config.rb:
 
-	require '/PATH/TO/lib/chef/handler/foreman_reporting.rb'
-	foreman_report_handler = ForemanReporting.new({:url => 'https://smart-proxy.example.com:8443'})
-	report_handlers << foreman_report_handler
-	exception_handlers << foreman_report_handler
+```ruby
+# this adds new functions to chef configuration
+require 'chef_handler_foreman'
+# here you can specify your connection options
+foreman_server_options  :url => 'http://your.server/foreman'
+# add following line if you want to upload node attributes (facts in Foreman language)
+foreman_facts_upload    true
+# add following line if you want to upload reports
+foreman_reports_upload  true
+```
 
-To play with facts uploading you can just add fact reporter like this:
-
-	require '/PATH/TO//lib/chef/handler/foreman_facts.rb'
-	foreman_facts_handler = ForemanFacts.new({:url => 'http://smart-proxy.example.com:8443'})
-	report_handlers << foreman_facts_handler
-	exception_handlers << foreman_facts_handler
-
-It's possible to change default chef-client's client.pem location using :
-        foreman_report_handler = ForemanReporting.new({:url => 'https://smart-proxy.example.com:8443', , :client_key => '/custom/path/client.pem'})
+You can also specify a second argument to foreman_reports_upload which is a number:
+- 1 (default) for reporter based on more detailed ResourceReporter
+- 2 not so verbose based just on run_status, actually just counts applied resources
