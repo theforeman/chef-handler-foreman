@@ -22,7 +22,7 @@ module ChefHandlerForeman
   class ForemanUploader
     attr_reader :options
 
-    def initialize(opts = {})
+    def initialize(opts)
       @options = opts
     end
 
@@ -49,16 +49,16 @@ module ChefHandlerForeman
       req.content_type = 'application/json'
       body_json        = body.to_json
       req.body         = body_json
-      req.add_field('X-Foreman-Signature',sign_request(body_json,options[:client_key]))
-      req.add_field('X-Foreman-Client',client_name)
+      req.add_field('X-Foreman-Signature', sign_request(body_json, options[:client_key]))
+      req.add_field('X-Foreman-Client', client_name)
       response         = http.request(req)
     end
 
-    def sign_request(body_json,key_path = '/etc/chef/client.pem')
+    def sign_request(body_json, key_path)
       hash_body = Digest::SHA256.hexdigest(body_json)
       key = OpenSSL::PKey::RSA.new(File.read(key_path))
       # Base64.encode64 is adding \n in the string
-      signature = Base64.encode64(key.sign(OpenSSL::Digest::SHA256.new,hash_body)).gsub("\n",'')
+      signature = Base64.encode64(key.sign(OpenSSL::Digest::SHA256.new, hash_body)).gsub("\n",'')
     end
   end
 end
