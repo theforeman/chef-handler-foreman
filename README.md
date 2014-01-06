@@ -7,9 +7,9 @@ See: http://www.theforeman.org
 ## Installation
 
 
-Since it's released as a gem you can simply run
+Since it's released as a gem you can simply run this command under root
 ```sh
-# gem install chef_foreman_handler
+gem install chef_handler_foreman
 ```
 ## Usage:
 
