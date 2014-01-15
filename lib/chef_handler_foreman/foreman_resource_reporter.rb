@@ -76,7 +76,7 @@ module ChefHandlerForeman
         begin
           Chef::Log.debug("Sending data...")
           if uploader
-            uploader.foreman_request('/api/reports', { "report" => run_data }, node.name)
+            uploader.foreman_request('/api/reports', { "report" => run_data }, node_name)
           else
             Chef::Log.error "No uploader registered for foreman reporting, skipping report upload"
           end
