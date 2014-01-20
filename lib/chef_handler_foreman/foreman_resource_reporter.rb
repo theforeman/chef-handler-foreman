@@ -1,6 +1,6 @@
 module ChefHandlerForeman
   class ForemanResourceReporter < ::Chef::ResourceReporter
-    attr_accessor :uploader
+    attr_accessor :uploader, :log_level
 
     def initialize(*args)
       @total_up_to_date     = 0
@@ -100,7 +100,7 @@ module ChefHandlerForeman
           "time"      => resources_per_time
       }
 
-      run_data["logs"] = resources_logs + [chef_log]
+      run_data["logs"] = filter_logs(resources_logs + [chef_log])
       run_data
     end
 
@@ -149,6 +149,15 @@ module ChefHandlerForeman
           "messages" => { "message" => message },
           "level"    => level
       } }
+    end
+
+    # currently we support only two log levels, 'notice' means do not filter, err 'means' only errors
+    def filter_logs(logs)
+      if log_level == 'err'
+        logs.select { |log| log.level == 'err' }
+      else
+        logs
+      end
     end
 
   end

@@ -9,14 +9,18 @@ module ChefHandlerForeman
     def foreman_server_options(options)
       options = { :client_key => client_key || '/etc/chef/client.pem' }.merge(options)
       @foreman_uploader = ForemanUploader.new(options)
+      # set uploader if handlers are already created
+      @foreman_facts_handler.uploader = @foreman_uploader if @foreman_facts_handler
+      @foreman_report_handler.uploader = @foreman_uploader if @foreman_report_handler
+      @foreman_reporter.uploader = @foreman_uploader if @foreman_reporter
     end
 
     def foreman_facts_upload(upload)
       if upload
-        foreman_facts_handler          = ForemanFacts.new
-        foreman_facts_handler.uploader = @foreman_uploader
-        report_handlers << foreman_facts_handler
-        exception_handlers << foreman_facts_handler
+        @foreman_facts_handler          = ForemanFacts.new
+        @foreman_facts_handler.uploader = @foreman_uploader
+        report_handlers << @foreman_facts_handler
+        exception_handlers << @foreman_facts_handler
       end
     end
 
@@ -24,21 +28,32 @@ module ChefHandlerForeman
       if upload
         case mode
           when 1
-            foreman_reporter          = ForemanResourceReporter.new(nil)
-            foreman_reporter.uploader = @foreman_uploader
+            @foreman_reporter           = ForemanResourceReporter.new(nil)
+            @foreman_reporter.uploader  = @foreman_uploader
+            @foreman_reporter.log_level = @foreman_reports_log_level
             if Chef::Config[:event_handlers].is_a?(Array)
-              Chef::Config[:event_handlers].push foreman_reporter
+              Chef::Config[:event_handlers].push @foreman_reporter
             else
-              Chef::Config[:event_handlers] = [foreman_reporter]
+              Chef::Config[:event_handlers] = [@foreman_reporter]
             end
           when 2
-            foreman_handler          = ForemanReporting.new
-            foreman_handler.uploader = uploader
-            report_handlers << foreman_handler
-            exception_handlers << foreman_handler
+            @foreman_report_handler          = ForemanReporting.new
+            @foreman_report_handler.uploader = uploader
+            report_handlers << @foreman_report_handler
+            exception_handlers << @foreman_report_handler
           else
             raise ArgumentError, 'unknown mode: ' + mode.to_s
         end
+      end
+    end
+
+    # level can be string notice or err
+    def reports_log_level(level)
+      raise ArgumentError, 'unknown level: ' + level.to_s unless %w(err notice).include?(level)
+
+      @foreman_reports_log_level = level
+      if @foreman_reporter
+        @foreman_reporter.log_level = level
       end
     end
   end
