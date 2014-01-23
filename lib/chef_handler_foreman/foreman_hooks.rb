@@ -47,9 +47,9 @@ module ChefHandlerForeman
       end
     end
 
-    # level can be string notice or err
+    # level can be string error notice debug
     def reports_log_level(level)
-      raise ArgumentError, 'unknown level: ' + level.to_s unless %w(err notice).include?(level)
+      raise ArgumentError, 'unknown level: ' + level.to_s unless %w(error notice debug).include?(level)
 
       @foreman_reports_log_level = level
       if @foreman_reporter

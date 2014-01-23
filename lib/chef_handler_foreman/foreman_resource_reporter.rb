@@ -126,12 +126,36 @@ module ChefHandlerForeman
       @all_resources.map do |resource|
         action  = resource.new_resource.action
         message = action.is_a?(Array) ? action.first.to_s : action.to_s
+        message = format_message(message, resource.new_resource)
         message += " (#{resource.exception.class} #{resource.exception.message})" unless resource.exception.nil?
+        level   =  resource_level(resource)
         { "log" => {
             "sources"  => { "source" => resource.new_resource.to_s },
             "messages" => { "message" => message },
-            "level"    => resource.exception.nil? ? "notice" : 'err'
+            "level"    => level
         } }
+      end
+    end
+
+    def format_message(message, resource)
+      case resource.resource_name.to_s
+        when 'template', 'cookbook_file'
+          message += " with diff "+resource.diff unless resource.diff.nil?
+        when 'package'
+          message += " package in #{resource.version}" unless resource.version.nil?
+        else
+          message = resource.action.to_s
+      end
+      message
+    end
+
+    def resource_level(resource)
+      if ! resource.exception.nil?
+        return 'err'
+      elsif resource.new_resource.updated
+        return 'notice'
+      else
+        return 'debug'
       end
     end
 
@@ -151,10 +175,16 @@ module ChefHandlerForeman
       } }
     end
 
-    # currently we support only two log levels, 'notice' means do not filter, err 'means' only errors
+    # currently we support only three log levels:
+    #  'debug' means do not filter,
+    #  'notice' updated resources and errors
+    #  'error' means only errors
+
     def filter_logs(logs)
-      if log_level == 'err'
-        logs.select { |log| log.level == 'err' }
+      if log_level == 'error'
+        logs.select { |log| log['log']['level'] == 'err' }
+      elsif log_level == 'notice'
+        logs.select { |log| ['err','notice'].include? log['log']['level'] }
       else
         logs
       end
