@@ -24,6 +24,8 @@ foreman_server_options  :url => 'http://your.server/foreman'
 foreman_facts_upload    true
 # add following line if you want to upload reports
 foreman_reports_upload  true
+# add following line to manage reports verbosity. Allowed values are debug, notice and error
+reports_log_level       "notice"
 ```
 
 You can also specify a second argument to foreman_reports_upload which is a number:
