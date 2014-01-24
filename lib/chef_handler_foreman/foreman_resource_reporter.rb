@@ -140,7 +140,9 @@ module ChefHandlerForeman
     def format_message(message, resource)
       case resource.resource_name.to_s
         when 'template', 'cookbook_file'
-          message += " with diff "+resource.diff unless resource.diff.nil?
+          unless resource.diff.nil?
+            message += " with diff " + resource.diff.gsub('\\n', "\n")
+          end
         when 'package'
           message += " package in #{resource.version}" unless resource.version.nil?
         else
