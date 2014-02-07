@@ -35,7 +35,7 @@ module ChefHandlerForeman
     end
 
     def plain_attributes
-      plainify(node.attributes.to_hash).flatten.inject(&:merge)
+      plainify(node.to_hash).flatten.inject(&:merge)
     end
 
     def plainify(hash, prefix = nil)
