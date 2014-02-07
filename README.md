@@ -31,3 +31,13 @@ reports_log_level       "notice"
 You can also specify a second argument to foreman_reports_upload which is a number:
 - 1 (default) for reporter based on more detailed ResourceReporter
 - 2 not so verbose based just on run_status, actually just counts applied resources
+
+## Chef 10 support
+
+Chef 10 is generally supported from version 0.0.6 and above. However you must set
+foreman_reports_upload mode to 2 manually. We can't get detailed reports in old 
+chef. The configuration line will look like this:
+
+```ruby
+foreman_reports_upload  true, 2
+```
