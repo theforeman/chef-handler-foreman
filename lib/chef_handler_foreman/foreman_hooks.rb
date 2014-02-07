@@ -1,6 +1,11 @@
 require 'chef_handler_foreman/foreman_facts'
 require 'chef_handler_foreman/foreman_reporting'
-require 'chef_handler_foreman/foreman_resource_reporter'
+
+# this reporter is supported in chef 11 or later
+unless Gem::Version.new(Chef::VERSION) < Gem::Version.new('11.0.0')
+  require 'chef_handler_foreman/foreman_resource_reporter'
+end
+
 require 'chef_handler_foreman/foreman_uploader'
 
 module ChefHandlerForeman
@@ -38,7 +43,7 @@ module ChefHandlerForeman
             end
           when 2
             @foreman_report_handler          = ForemanReporting.new
-            @foreman_report_handler.uploader = uploader
+            @foreman_report_handler.uploader = @foreman_uploader
             report_handlers << @foreman_report_handler
             exception_handlers << @foreman_report_handler
           else

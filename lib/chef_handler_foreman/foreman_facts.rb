@@ -35,7 +35,9 @@ module ChefHandlerForeman
     end
 
     def plain_attributes
-      plainify(node.attributes.to_hash).flatten.inject(&:merge)
+      # chef 10 attributes can be access by to_hash directly, chef 11 uses attributes method
+      attributes = node.respond_to?(:attributes) ? node.attributes : node.to_hash
+      plainify(attributes.to_hash).flatten.inject(&:merge)
     end
 
     def plainify(hash, prefix = nil)
