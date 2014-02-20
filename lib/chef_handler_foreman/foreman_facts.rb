@@ -24,14 +24,29 @@ module ChefHandlerForeman
     private
 
     def prepare_facts
+      os      = node.lsb[:id] || node.platform
+      release = node.lsb[:release] || node.platform_version
+
       { :name  => node.name,
         :facts => plain_attributes.merge({
-                                             :operatingsystem        => node.lsb[:id],
-                                             :operatingsystemrelease => node.lsb.release,
+                                             :operatingsystem        => normalize(os),
+                                             :operatingsystemrelease => release,
                                              :_timestamp             => Time.now,
                                              :_type                  => 'foreman_chef'
                                          })
       }
+    end
+
+    # if node.lsb[:id] fails and we use platform instead, normalize os names
+    def normalize(os)
+      case os
+      when 'redhat'
+        'RedHat'
+      when 'centos'
+        'CentOS'
+      else
+        os.capitalize
+      end
     end
 
     def plain_attributes
