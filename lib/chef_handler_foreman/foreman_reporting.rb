@@ -12,10 +12,16 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 require 'chef/handler'
+require 'chef_handler_foreman/foreman_uploader'
 
 module ChefHandlerForeman
   class ForemanReporting < ::Chef::Handler
     attr_accessor :uploader
+    attr_reader :config
+
+    def initialize(config=nil)
+      @uploader = ForemanUploader.new(config) unless config.nil?
+    end
 
     def report
       report                   = { 'host' => node.fqdn, 'reported_at' => Time.now.utc.to_s }
