@@ -1,12 +1,12 @@
-require 'chef_handler_foreman/foreman_facts'
-require 'chef_handler_foreman/foreman_reporting'
+require "#{File.dirname(__FILE__)}/foreman_facts"
+require "#{File.dirname(__FILE__)}/foreman_reporting"
 
 # this reporter is supported in chef 11 or later
 unless Gem::Version.new(Chef::VERSION) < Gem::Version.new('11.0.0')
-  require 'chef_handler_foreman/foreman_resource_reporter'
+  require "#{File.dirname(__FILE__)}/foreman_resource_reporter"
 end
 
-require 'chef_handler_foreman/foreman_uploader'
+require "#{File.dirname(__FILE__)}/foreman_uploader"
 
 module ChefHandlerForeman
   module ForemanHooks
