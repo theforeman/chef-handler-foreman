@@ -13,7 +13,7 @@ gem install chef_handler_foreman
 ```
 ## Usage:
 
-In /etc/chef/config.rb:
+In /etc/chef/client.rb:
 
 ```ruby
 # this adds new functions to chef configuration
