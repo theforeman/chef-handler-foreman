@@ -27,8 +27,11 @@ module ChefHandlerForeman
       os      = node.lsb[:id] || node.platform
       release = node.lsb[:release] || node.platform_version
 
+      # operatingsystem and operatingsystemrelase are not needed since foreman_chef 0.1.3
       { :name  => node.name,
         :facts => plain_attributes.merge({
+                                             :environment            => node.chef_environment,
+                                             :chef_node_name         => node.name,
                                              :operatingsystem        => normalize(os),
                                              :operatingsystemrelease => release,
                                              :_timestamp             => Time.now,
