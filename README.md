@@ -32,6 +32,23 @@ You can also specify a second argument to foreman_reports_upload which is a numb
 - 1 (default) for reporter based on more detailed ResourceReporter
 - 2 not so verbose based just on run_status, actually just counts applied resources
 
+Alternatively you can call the handler from the config script:
+chef_gem 'chef_handler_foreman'
+require 'chef_handler_foreman'
+
+```ruby
+chef_handler "ChefHandlerForeman::ForemanReporting" do
+  arguments [
+    :url => "https://foreman_url",
+    :foreman_ssl_cert => "/path/to/ssl.crt",
+    :foreman_ssl_key => "/path/to/ssl.key",
+    :client_key => "/path/to/client.key"
+  ]
+  source "chef_handler_foreman/foreman_reporting"
+  action :enable
+end
+```
+
 ## Chef 10 support
 
 Chef 10 is generally supported from version 0.0.6 and above. However you must set
