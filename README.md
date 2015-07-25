@@ -22,6 +22,13 @@ require 'chef_handler_foreman'
 foreman_server_options  :url => 'http://your.server/foreman'
 # add following line if you want to upload node attributes (facts in Foreman language)
 foreman_facts_upload    true
+## Facts whitelist / blacklisting
+# add following line if you want to upload only specific node attributes - only top-level attributes
+foreman_facts_whitelist ['lsb','network','cpu']
+# add following line if you want to avoid uploading specific node attributes - any part from the key will do
+foreman_facts_blacklist ['kernel','counters','interfaces::sit0']
+# enable caching of attributes - (full) upload will be performed only if attributes changed
+foreman_facts_cache_file '/var/cache/chef_foreman_cache.md5'
 # add following line if you want to upload reports
 foreman_reports_upload  true
 # add following line to manage reports verbosity. Allowed values are debug, notice and error
@@ -41,3 +48,16 @@ chef. The configuration line will look like this:
 ```ruby
 foreman_reports_upload  true, 2
 ```
+
+### Caching of facts
+
+Note that some attributes, such as network counters or used memory, change on every chef-client run.
+For caching to work, you would need to blacklist such attributes, otherwise facts will be uploaded
+on every run.
+
+## Facts whitelisting / blacklisting
+
+Cherry picking which facts to upload, coupled with caching, allows to scale the solution to many
+thousands of nodes. Note, however, that some attributes are expected by Foreman to exist, and thus
+should not be blacklisted. The whitelist and blacklist examples above include a minimal set of
+attributes known to work in a large scale production environment.

@@ -12,14 +12,20 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 require 'chef/handler'
+require 'digest/md5'
 
 module ChefHandlerForeman
   class ForemanFacts < Chef::Handler
     attr_accessor :uploader
+    attr_accessor :blacklist
+    attr_accessor :whitelist
+    attr_accessor :cache_file
+    attr_accessor :cache_expired
 
     def report
       send_attributes(prepare_facts)
     end
+
 
     private
 
@@ -55,7 +61,10 @@ module ChefHandlerForeman
     def plain_attributes
       # chef 10 attributes can be access by to_hash directly, chef 11 uses attributes method
       attributes = node.respond_to?(:attributes) ? node.attributes : node.to_hash
-      plainify(attributes.to_hash).flatten.inject(&:merge)
+      attributes = attributes.select { |key, value| @whitelist.include?(key) } if @whitelist
+      attrs = plainify(attributes.to_hash).flatten.inject(&:merge)
+      verify_checksum(attrs) if @cache_file
+      attrs
     end
 
     def plainify(hash, prefix = nil)
@@ -67,8 +76,11 @@ module ChefHandlerForeman
           result.push plainify(array_to_hash(value), get_key(key, prefix))
         else
           new                       = {}
-          new[get_key(key, prefix)] = value
-          result.push new
+          full_key = get_key(key, prefix)
+          if @blacklist.nil? || !@blacklist.any? { |black_key| full_key.include?(black_key) }
+            new[full_key] = value
+            result.push new
+          end
         end
       end
       result
@@ -85,11 +97,31 @@ module ChefHandlerForeman
     end
 
     def send_attributes(attributes)
-      if uploader
-        uploader.foreman_request('/api/hosts/facts', attributes, node.name)
+      if @cache_file and !@cache_expired
+        Chef::Log.info "No attributes have changed - not uploading to foreman" 
       else
-        Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
+        if uploader
+          uploader.foreman_request('/api/hosts/facts', attributes, node.name)
+        else
+          Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
+        end
       end
+    end
+
+    def verify_checksum(attributes)
+      @cache_expired = true
+      attrs_checksum = Digest::MD5.hexdigest(attributes.to_s)
+      if File.exist?(@cache_file)
+        contents = File.read(@cache_file)
+        if attrs_checksum == contents
+          @cache_expired = false
+        end
+      end
+      File.open(@cache_file, 'w') { |f| f.write(attrs_checksum) }
+      rescue => e
+        @cache_expired = true
+        Chef::Log.info "unable to verify cache checksum - #{e.message}, facts will be sent"
+        Chef::Log.debug e.backtrace.join("\n")
     end
   end
 end
