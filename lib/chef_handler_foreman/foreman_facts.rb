@@ -101,6 +101,8 @@ module ChefHandlerForeman
         Chef::Log.info "No attributes have changed - not uploading to foreman" 
       else
         if uploader
+          Chef::Log.info 'Sending attributes to foreman'
+          Chef::Log.debug attributes.inspect
           uploader.foreman_request('/api/hosts/facts', attributes, node.name)
         else
           Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
@@ -118,10 +120,10 @@ module ChefHandlerForeman
         end
       end
       File.open(@cache_file, 'w') { |f| f.write(attrs_checksum) }
-      rescue => e
-        @cache_expired = true
-        Chef::Log.info "unable to verify cache checksum - #{e.message}, facts will be sent"
-        Chef::Log.debug e.backtrace.join("\n")
+    rescue => e
+      @cache_expired = true
+      Chef::Log.info "unable to verify cache checksum - #{e.message}, facts will be sent"
+      Chef::Log.debug e.backtrace.join("\n")
     end
   end
 end
