@@ -52,6 +52,24 @@ module ChefHandlerForeman
       end
     end
 
+    def foreman_facts_blacklist(blacklist)
+      if @foreman_facts_handler
+        @foreman_facts_handler.blacklist = blacklist
+      end
+    end
+
+    def foreman_facts_whitelist(whitelist)
+      if @foreman_facts_handler
+        @foreman_facts_handler.whitelist = whitelist
+      end
+    end
+
+    def foreman_facts_cache_file(cache_file)
+      if @foreman_facts_handler
+        @foreman_facts_handler.cache_file = cache_file
+      end
+    end
+
     # level can be string error notice debug
     def reports_log_level(level)
       raise ArgumentError, 'unknown level: ' + level.to_s unless %w(error notice debug).include?(level)
