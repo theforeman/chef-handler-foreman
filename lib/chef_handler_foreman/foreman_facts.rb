@@ -30,8 +30,15 @@ module ChefHandlerForeman
     private
 
     def prepare_facts
-      os      = node.lsb[:id] || node.platform
-      release = node.lsb[:release] || node.platform_version
+      return false if node.nil?
+
+      os, release = nil
+      if node.respond_to?(:lsb)
+        os = node.lsb[:id]
+        release = node.lsb[:release]
+      end
+      os ||= node.platform
+      release ||= node.platform_version
 
       # operatingsystem and operatingsystemrelase are not needed since foreman_chef 0.1.3
       { :name  => node.name,
@@ -98,7 +105,9 @@ module ChefHandlerForeman
 
     def send_attributes(attributes)
       if @cache_file and !@cache_expired
-        Chef::Log.info "No attributes have changed - not uploading to foreman" 
+        Chef::Log.info "No attributes have changed - not uploading to foreman"
+      elsif !attributes
+        Chef::Log.info "No attributes received, failed run - not uploading to foreman"
       else
         if uploader
           Chef::Log.info 'Sending attributes to foreman'
