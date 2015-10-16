@@ -91,7 +91,7 @@ module ChefHandlerForeman
 
     def prepare_run_data
       run_data                = {}
-      run_data["host"]        = node_name
+      run_data["host"]        = node_name.downcase
       run_data["reported_at"] = end_time.to_s
       run_data["status"]      = resources_per_status
 
