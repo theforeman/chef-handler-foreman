@@ -61,3 +61,6 @@ Cherry picking which facts to upload, coupled with caching, allows to scale the 
 thousands of nodes. Note, however, that some attributes are expected by Foreman to exist, and thus
 should not be blacklisted. The whitelist and blacklist examples above include a minimal set of
 attributes known to work in a large scale production environment.
+
+Note that the order of config options matter. Blacklist/whitelist must be below foreman_facts_upload
+line.
