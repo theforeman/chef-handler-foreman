@@ -41,10 +41,10 @@ module ChefHandlerForeman
       release ||= node['platform_version']
 
       # operatingsystem and operatingsystemrelase are not needed since foreman_chef 0.1.3
-      { :name  => node['fqdn'],
+      { :name  => node.name.downcase,
         :facts => plain_attributes.merge({
-                                             :environment            => node['chef_environment'],
-                                             :chef_node_name         => node['fqdn'],
+                                             :environment            => node.chef_environment,
+                                             :chef_node_name         => node.name,
                                              :operatingsystem        => normalize(os),
                                              :operatingsystemrelease => release,
                                              :_timestamp             => Time.now,
@@ -112,7 +112,7 @@ module ChefHandlerForeman
         if uploader
           Chef::Log.info 'Sending attributes to foreman'
           Chef::Log.debug attributes.inspect
-          uploader.foreman_request('/api/hosts/facts', attributes, node['fqdn'])
+          uploader.foreman_request('/api/hosts/facts', attributes, node.name)
         else
           Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
         end

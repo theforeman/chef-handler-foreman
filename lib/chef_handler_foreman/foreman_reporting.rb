@@ -80,7 +80,7 @@ module ChefHandlerForeman
 
     def send_report(report)
       if uploader
-        uploader.foreman_request('/api/reports', report, node['fqdn'])
+        uploader.foreman_request('/api/reports', report, node.name)
       else
         Chef::Log.error "No uploader registered for foreman reporting, skipping report upload"
       end
