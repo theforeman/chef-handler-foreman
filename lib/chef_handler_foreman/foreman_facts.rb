@@ -34,17 +34,17 @@ module ChefHandlerForeman
 
       os, release = nil
       if node.respond_to?(:lsb)
-        os = node.lsb[:id]
-        release = node.lsb[:release]
+        os = node['lsb']['id']
+        release = node['lsb']['release']
       end
-      os ||= node.platform
-      release ||= node.platform_version
+      os ||= node['platform']
+      release ||= node['platform_version']
 
       # operatingsystem and operatingsystemrelase are not needed since foreman_chef 0.1.3
-      { :name  => node.name.downcase,
+      { :name  => node['fqdn'],
         :facts => plain_attributes.merge({
-                                             :environment            => node.chef_environment,
-                                             :chef_node_name         => node.name,
+                                             :environment            => node['chef_environment'],
+                                             :chef_node_name         => node['fqdn'],
                                              :operatingsystem        => normalize(os),
                                              :operatingsystemrelease => release,
                                              :_timestamp             => Time.now,
@@ -53,7 +53,7 @@ module ChefHandlerForeman
       }
     end
 
-    # if node.lsb[:id] fails and we use platform instead, normalize os names
+    # if node['lsb']['id'] fails and we use platform instead, normalize os names
     def normalize(os)
       case os
       when 'redhat'
@@ -112,7 +112,7 @@ module ChefHandlerForeman
         if uploader
           Chef::Log.info 'Sending attributes to foreman'
           Chef::Log.debug attributes.inspect
-          uploader.foreman_request('/api/hosts/facts', attributes, node.name)
+          uploader.foreman_request('/api/hosts/facts', attributes, node['fqdn'])
         else
           Chef::Log.error "No uploader registered for foreman facts, skipping facts upload"
         end

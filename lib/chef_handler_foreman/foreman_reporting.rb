@@ -18,7 +18,7 @@ module ChefHandlerForeman
     attr_accessor :uploader
 
     def report
-      report                   = { 'host' => node.fqdn.downcase, 'reported_at' => Time.now.utc.to_s }
+      report                   = { 'host' => node['fqdn'].downcase, 'reported_at' => Time.now.utc.to_s }
       report_status            = Hash.new(0)
 
 
@@ -80,7 +80,7 @@ module ChefHandlerForeman
 
     def send_report(report)
       if uploader
-        uploader.foreman_request('/api/reports', report, node.name)
+        uploader.foreman_request('/api/reports', report, node['fqdn'])
       else
         Chef::Log.error "No uploader registered for foreman reporting, skipping report upload"
       end
