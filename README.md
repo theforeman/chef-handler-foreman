@@ -37,6 +37,34 @@ foreman_reports_upload  true
 reports_log_level       "notice"
 ```
 
+### Using Chef-Client Cookbook
+
+You can utilize the [Chef-Client](https://github.com/chef-cookbooks/chef-client) Cookbook to setup your client.rb
+
+With a Role
+
+```json
+"chef_client": {
+  "chef_server_url": "https://chef.domain.com",
+  "config": {
+    "foreman_server_url": "https://foreman.domain.com",
+    "foreman_facts_upload": true,
+    "foreman_reports_upload": true,
+    "reports_log_level": "notice"
+  }
+}
+```
+
+With attributes
+
+```ruby
+node['chef_client']['config']['foreman_server_url'] = 'https://foreman.domain.com'
+node['chef_client']['config']['foreman_facts_upload'] = true
+node['chef_client']['config']['foreman_reports_upload'] = true
+node['chef_client']['config']['reports_log_level'] = 'notice'
+```
+
+
 You can also specify a second argument to foreman_reports_upload which is a number:
 - 1 (default) for reporter based on more detailed ResourceReporter
 - 2 not so verbose based just on run_status, actually just counts applied resources
