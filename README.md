@@ -20,6 +20,8 @@ In /etc/chef/client.rb:
 require 'chef_handler_foreman'
 # here you can specify your connection options
 foreman_server_options  :url => 'http://your.server/foreman'
+# Or another option to set URL if using chef-client cookbook config option
+foreman_server_url 'http://foreman.domain.com'
 # add following line if you want to upload node attributes (facts in Foreman language)
 foreman_facts_upload    true
 ## Facts whitelist / blacklisting
@@ -64,3 +66,4 @@ attributes known to work in a large scale production environment.
 
 Note that the order of config options matter. Blacklist/whitelist must be below foreman_facts_upload
 line.
+
