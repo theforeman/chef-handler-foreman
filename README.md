@@ -20,6 +20,8 @@ In /etc/chef/client.rb:
 require 'chef_handler_foreman'
 # here you can specify your connection options
 foreman_server_options  :url => 'http://your.server/foreman'
+# Or another option to set URL if using chef-client cookbook config option
+foreman_server_url 'http://foreman.domain.com'
 # add following line if you want to upload node attributes (facts in Foreman language)
 foreman_facts_upload    true
 ## Facts whitelist / blacklisting
@@ -34,6 +36,34 @@ foreman_reports_upload  true
 # add following line to manage reports verbosity. Allowed values are debug, notice and error
 reports_log_level       "notice"
 ```
+
+### Using Chef-Client Cookbook
+
+You can utilize the [Chef-Client](https://github.com/chef-cookbooks/chef-client) Cookbook to setup your client.rb
+
+With a Role
+
+```json
+"chef_client": {
+  "chef_server_url": "https://chef.domain.com",
+  "config": {
+    "foreman_server_url": "https://foreman.domain.com",
+    "foreman_facts_upload": true,
+    "foreman_reports_upload": true,
+    "reports_log_level": "notice"
+  }
+}
+```
+
+With attributes
+
+```ruby
+node['chef_client']['config']['foreman_server_url'] = 'https://foreman.domain.com'
+node['chef_client']['config']['foreman_facts_upload'] = true
+node['chef_client']['config']['foreman_reports_upload'] = true
+node['chef_client']['config']['reports_log_level'] = 'notice'
+```
+
 
 You can also specify a second argument to foreman_reports_upload which is a number:
 - 1 (default) for reporter based on more detailed ResourceReporter
@@ -64,3 +94,4 @@ attributes known to work in a large scale production environment.
 
 Note that the order of config options matter. Blacklist/whitelist must be below foreman_facts_upload
 line.
+
