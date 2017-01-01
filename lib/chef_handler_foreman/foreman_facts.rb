@@ -34,11 +34,11 @@ module ChefHandlerForeman
 
       os, release = nil
       if node.respond_to?(:lsb)
-        os = node.lsb[:id]
-        release = node.lsb[:release]
+        os = node['lsb']['id']
+        release = node['lsb']['release']
       end
-      os ||= node.platform
-      release ||= node.platform_version
+      os ||= node['platform']
+      release ||= node['platform_version']
 
       # operatingsystem and operatingsystemrelase are not needed since foreman_chef 0.1.3
       { :name  => node.name.downcase,
@@ -53,7 +53,7 @@ module ChefHandlerForeman
       }
     end
 
-    # if node.lsb[:id] fails and we use platform instead, normalize os names
+    # if node['lsb']['id'] fails and we use platform instead, normalize os names
     def normalize(os)
       case os
       when 'redhat'
