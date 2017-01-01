@@ -18,7 +18,7 @@ module ChefHandlerForeman
 
     # {:url => '', ...}
     def foreman_server_options(options={})
-      options[:client_key] = '/etc/chef/client.pem' unless options[:client_key]
+      options[:client_key] = client_key || '/etc/chef/client.pem' unless options[:client_key]
       raise "No Foreman URL! Please provide a URL" unless options[:url]
       @foreman_uploader = ForemanUploader.new(options)
       # set uploader if handlers are already created
