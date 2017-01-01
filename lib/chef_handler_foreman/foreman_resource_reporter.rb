@@ -109,16 +109,7 @@ module ChefHandlerForeman
     end
 
     def resources_per_status
-      if @why_run
-        {
-          "applied"         => @total_updated,
-          "restarted"       => @total_restarted,
-          "failed"          => @total_failed,
-          "failed_restarts" => @total_failed_restart,
-          "skipped"         => @total_skipped,
-          "pending"         => 0
-        }
-      else
+      if Chef::Config.why_run
         {
           "applied"         => 0,
           "restarted"       => 0,
@@ -126,6 +117,15 @@ module ChefHandlerForeman
           "failed_restarts" => 0,
           "skipped"         => @total_skipped,
           "pending"         => @total_updated + @total_restarted + @total_failed + @total_failed_restart
+        }
+      else
+        {
+          "applied"         => @total_updated,
+          "restarted"       => @total_restarted,
+          "failed"          => @total_failed,
+          "failed_restarts" => @total_failed_restart,
+          "skipped"         => @total_skipped,
+          "pending"         => 0
         }
       end
     end
