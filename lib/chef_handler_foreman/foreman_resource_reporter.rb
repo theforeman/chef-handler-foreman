@@ -68,6 +68,10 @@ module ChefHandlerForeman
       end
     end
 
+    def resource_bypassed(*args)
+      @why_run = true
+    end
+
     def post_reporting_data
       if reporting_enabled?
         run_data = prepare_run_data
@@ -105,13 +109,25 @@ module ChefHandlerForeman
     end
 
     def resources_per_status
-      { "applied"         => @total_updated,
-        "restarted"       => @total_restarted,
-        "failed"          => @total_failed,
-        "failed_restarts" => @total_failed_restart,
-        "skipped"         => @total_skipped,
-        "pending"         => 0
-      }
+      if @why_run
+        {
+          "applied"         => @total_updated,
+          "restarted"       => @total_restarted,
+          "failed"          => @total_failed,
+          "failed_restarts" => @total_failed_restart,
+          "skipped"         => @total_skipped,
+          "pending"         => 0
+        }
+      else
+        {
+          "applied"         => 0,
+          "restarted"       => 0,
+          "failed"          => 0,
+          "failed_restarts" => 0,
+          "skipped"         => @total_skipped,
+          "pending"         => @total_updated + @total_restarted + @total_failed + @total_failed_restart
+        }
+      end
     end
 
     def resources_per_time
