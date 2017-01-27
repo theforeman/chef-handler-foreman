@@ -35,6 +35,10 @@ foreman_facts_cache_file '/var/cache/chef_foreman_cache.md5'
 foreman_reports_upload  true
 # add following line to manage reports verbosity. Allowed values are debug, notice and error
 reports_log_level       "notice"
+# add following line to load additional attributes from Foreman
+foreman_enc             true
+# to configure the level of attributes coming from Foreman you can set a second argument like this
+foreman_enc             true, 'default'
 ```
 
 ### Using Chef-Client Cookbook
@@ -48,6 +52,7 @@ With a Role
   "chef_server_url": "https://chef.domain.com",
   "config": {
     "foreman_server_url": "https://foreman.domain.com",
+    "foreman_enc": true,
     "foreman_facts_upload": true,
     "foreman_reports_upload": true,
     "reports_log_level": "notice"
@@ -64,10 +69,42 @@ node['chef_client']['config']['foreman_reports_upload'] = true
 node['chef_client']['config']['reports_log_level'] = 'notice'
 ```
 
-
 You can also specify a second argument to foreman_reports_upload which is a number:
 - 1 (default) for reporter based on more detailed ResourceReporter
 - 2 not so verbose based just on run_status, actually just counts applied resources
+
+### Caching of facts
+
+Note that some attributes, such as network counters or used memory, change on every chef-client run.
+For caching to work, you would need to blacklist such attributes, otherwise facts will be uploaded
+on every run.
+
+### Facts whitelisting / blacklisting
+
+Cherry picking which facts to upload, coupled with caching, allows to scale the solution to many
+thousands of nodes. Note, however, that some attributes are expected by Foreman to exist, and thus
+should not be blacklisted. The whitelist and blacklist examples above include a minimal set of
+attributes known to work in a large scale production environment.
+
+Note that the order of config options matter. Blacklist/whitelist must be below foreman_facts_upload
+line.
+
+### Loading attribute from Foreman
+
+Since version 0.2.0, you can also load node attributes from Foreman. This requires smart_proxy_chef
+plugin version 0.2.0 as well. Attributes loaded from Foreman will be merged to those coming form
+chef-server. You can optionally set on which level they will be injected. Available values are:
+
+* default
+* force_default
+* normal
+* override
+* force_override
+* automatic
+
+If chef attribute and Foreman parameter have the same name, the priority based on levels
+above will determine, which will override the other one. A default level is force_default,
+so you can override only default attributes from Foreman.
 
 ## Chef 10 support
 
@@ -78,20 +115,3 @@ chef. The configuration line will look like this:
 ```ruby
 foreman_reports_upload  true, 2
 ```
-
-### Caching of facts
-
-Note that some attributes, such as network counters or used memory, change on every chef-client run.
-For caching to work, you would need to blacklist such attributes, otherwise facts will be uploaded
-on every run.
-
-## Facts whitelisting / blacklisting
-
-Cherry picking which facts to upload, coupled with caching, allows to scale the solution to many
-thousands of nodes. Note, however, that some attributes are expected by Foreman to exist, and thus
-should not be blacklisted. The whitelist and blacklist examples above include a minimal set of
-attributes known to work in a large scale production environment.
-
-Note that the order of config options matter. Blacklist/whitelist must be below foreman_facts_upload
-line.
-

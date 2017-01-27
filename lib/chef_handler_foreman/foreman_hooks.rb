@@ -4,6 +4,7 @@ require "#{File.dirname(__FILE__)}/foreman_reporting"
 # this reporter is supported in chef 11 or later
 unless Gem::Version.new(Chef::VERSION) < Gem::Version.new('11.0.0')
   require "#{File.dirname(__FILE__)}/foreman_resource_reporter"
+  require "#{File.dirname(__FILE__)}/foreman_enc_fetcher"
 end
 
 require "#{File.dirname(__FILE__)}/foreman_uploader"
@@ -75,6 +76,18 @@ module ChefHandlerForeman
     def foreman_facts_cache_file(cache_file)
       if @foreman_facts_handler
         @foreman_facts_handler.cache_file = cache_file
+      end
+    end
+
+    def foreman_enc(enc, level = 'force_default')
+      if enc
+        @foreman_enc_fetcher = ForemanEncFetcher.new(level)
+        @foreman_enc_fetcher.uploader = @foreman_uploader
+        if Chef::Config[:event_handlers].is_a?(Array)
+          Chef::Config[:event_handlers].push @foreman_enc_fetcher
+        else
+          Chef::Config[:event_handlers] = [@foreman_enc_fetcher]
+        end
       end
     end
 
