@@ -10,6 +10,7 @@ require "#{File.dirname(__FILE__)}/foreman_uploader"
 
 module ChefHandlerForeman
   module ForemanHooks
+    attr_reader :foreman_uploader, :foreman_facts_handler, :foreman_report_handler, :foreman_reporter
 
     # Provide a chef-client cookbook friendly option
     def foreman_server_url(url)

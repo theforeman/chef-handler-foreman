@@ -26,7 +26,7 @@ module ChefHandlerForeman
       @options = opts
     end
 
-    def foreman_request(path, body, client_name)
+    def foreman_request(path, body, client_name, method = 'post')
       uri              = URI.parse(options[:url])
       http             = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl     = uri.scheme == 'https'
@@ -44,21 +44,39 @@ module ChefHandlerForeman
         end
       end
 
-      req = Net::HTTP::Post.new("#{uri.path}/#{path}")
+      req = build_request(method, uri, path)
       req.add_field('Accept', 'application/json,version=2')
-      req.content_type = 'application/json'
-      body_json        = body.to_json
-      req.body         = body_json
-      req.add_field('X-Foreman-Signature', sign_request(body_json, options[:client_key]))
       req.add_field('X-Foreman-Client', client_name)
-      response         = http.request(req)
+      req.body = body.to_json
+      req.content_type = 'application/json'
+      # signature can be computed once we set body and X-Foreman-Client
+      req.add_field('X-Foreman-Signature', signature(req))
+      response = http.request(req)
     end
 
-    def sign_request(body_json, key_path)
-      hash_body = Digest::SHA256.hexdigest(body_json)
-      key = OpenSSL::PKey::RSA.new(File.read(key_path))
+    def build_request(method, uri, path)
+      Net::HTTP.const_get(method.capitalize).new("#{uri.path}/#{path}")
+    rescue NameError => e
+      raise "unsupported method #{method}, try one of get, post, delete, put"
+    end
+
+    def signature(request)
+      case request
+        when Net::HTTP::Post, Net::HTTP::Patch, Net::HTTP::Put
+          sign_data(request.body)
+        when Net::HTTP::Get, Net::HTTP::Delete
+          sign_data(request['X-Foreman-Client'])
+        else
+          raise "Don't know how to sign #{req.class} requests"
+      end
+    end
+
+    def sign_data(data)
+      hash_to_sign = Digest::SHA256.hexdigest(data)
+      key = OpenSSL::PKey::RSA.new(File.read(options[:client_key]))
       # Base64.encode64 is adding \n in the string
-      signature = Base64.encode64(key.sign(OpenSSL::Digest::SHA256.new, hash_body)).gsub("\n",'')
+      signature = Base64.encode64(key.sign(OpenSSL::Digest::SHA256.new, hash_to_sign)).gsub("\n",'')
     end
   end
 end
+
