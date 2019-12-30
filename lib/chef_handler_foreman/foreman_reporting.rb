@@ -71,7 +71,7 @@ module ChefHandlerForeman
       end
 
       report['logs'] = logs
-      full_report    = { 'report' => report }
+      full_report    = { 'config_report' => report }
 
       send_report(full_report)
     end
@@ -80,7 +80,7 @@ module ChefHandlerForeman
 
     def send_report(report)
       if uploader
-        uploader.foreman_request('/api/reports', report, node.name)
+        uploader.foreman_request('/api/config_reports', report, node.name)
       else
         Chef::Log.error "No uploader registered for foreman reporting, skipping report upload"
       end
